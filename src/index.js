@@ -4,34 +4,13 @@ const readCSV = require('./csvReader');
 async function executeSELECTQuery(query) {
     const { fields, table, whereClauses, joinTable, joinCondition } = parseQuery(query);
     let data = await readCSV(`${table}.csv`);
+    data = await join(joinTable, joinCondition, data, table, fields);
+    const filteredData = data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)))
+    return select(filteredData, fields);
+}
 
-    // Perform INNER JOIN if specified
-    if (joinTable && joinCondition) {
-        const joinData = await readCSV(`${joinTable}.csv`);
-        data = data.flatMap(mainRow => {
-            return joinData
-                .filter(joinRow => {
-                    const mainValue = mainRow[joinCondition.left.split('.')[1]];
-                    const joinValue = joinRow[joinCondition.right.split('.')[1]];
-                    return mainValue === joinValue;
-                })
-                .map(joinRow => {
-                    return fields.reduce((acc, field) => {
-                        const [tableName, fieldName] = field.split('.');
-                        acc[field] = tableName === table ? mainRow[fieldName] : joinRow[fieldName];
-                        return acc;
-                    }, {});
-                });
-        });
-    }
-
-    // Apply WHERE clause filtering
-    const filteredData = whereClauses.length > 0
-        ? data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)))
-        : data;
-
-    // Select the specified fields
-    return filteredData.map(row => {
+function select(data, fields) {
+    return data.map(row => {
         const selectedRow = {};
         fields.forEach(field => {
             selectedRow[field] = row[field];
@@ -53,5 +32,38 @@ function evaluateCondition(row, clause) {
     }
 }
 
+async function join(joinTable, joinCondition, data, table, fields) {
+    if (!joinTable || !joinCondition) return data;
+    const joinData = await readCSV(`${joinTable}.csv`);
+    const result = [];
+    const [leftField, rightField] = getJoinFields(joinCondition);
+    for (const mainRow of data) {
+        const mainValue = mainRow[leftField];
+        for (const joinRow of joinData) {
+            const joinValue = joinRow[rightField];
+            if (mainValue === joinValue) {
+                result.push(buildRow(mainRow, joinRow, table, fields));
+            }
+        }
+    }
+    return result;
+}
+
+function getJoinFields(joinCondition) {
+    const left = joinCondition.left.split('.')[1];
+    const right = joinCondition.right.split('.')[1];
+    return [left, right];
+}
+
+function buildRow(mainRow, joinRow, table, fields) {
+    const row = {};
+
+    for (const field of fields) {
+        const [tableName, fieldName] = field.split('.');
+        row[field] = tableName === table ? mainRow[fieldName] : joinRow[fieldName];
+    }
+
+    return row;
+}
 
 module.exports = executeSELECTQuery;
