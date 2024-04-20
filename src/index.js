@@ -1,10 +1,10 @@
-const parseQuery = require('./queryParser');
+const {parseQuery} = require('./queryParser');
 const readCSV = require('./csvReader');
 
 async function executeSELECTQuery(query) {
     const { fields, table, whereClauses, joinTable, joinCondition } = parseQuery(query);
     let data = await readCSV(`${table}.csv`);
-    data = await join(joinTable, joinCondition, data, table, fields);
+    data = await join(data, joinTable, joinCondition, fields, table);
     const filteredData = data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)))
     return select(filteredData, fields);
 }
@@ -32,7 +32,7 @@ function evaluateCondition(row, clause) {
     }
 }
 
-async function join(joinTable, joinCondition, data, table, fields) {
+async function join(data, joinTable, joinCondition, fields, table, type="INNER") {
     if (!joinTable || !joinCondition) return data;
     const joinData = await readCSV(`${joinTable}.csv`);
     const result = [];
