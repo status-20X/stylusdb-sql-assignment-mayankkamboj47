@@ -3,6 +3,7 @@ function parseQuery(query) {
     query = query.trim();
 
     let {joinTable, joinCondition, joinType} = parseJoinClause(query);
+    let {hasAggregateWithoutGroupBy, groupByFields} = parseGroupBy(query);
     // Initialize variables for different parts of the query
 
     // Split the query at the WHERE clause if it exists
@@ -10,7 +11,7 @@ function parseQuery(query) {
     query = whereSplit[0]; // Everything before WHERE clause
 
     // WHERE clause is the second part after splitting, if it exists
-    const whereClause = whereSplit.length > 1 ? whereSplit[1].trim() : null;
+    const whereClause = whereSplit.length > 1 ? whereSplit[1].trim().split(/GROUP BY/)[0] : null;
 
 
     // Parse the SELECT part
@@ -36,20 +37,25 @@ function parseQuery(query) {
         whereClauses,
         joinTable,
         joinCondition,
-        joinType
+        joinType,
+        groupByFields,
+        hasAggregateWithoutGroupBy
     };
 }
 
 function parseWhereClause(whereString) {
+    console.log("WHERE STRING", whereString)
     const conditionRegex = /(.*?)(=|!=|>|<|>=|<=)(.*)/;
     return whereString.split(/ AND | OR /i).map(conditionString => {
         const match = conditionString.match(conditionRegex);
         if (match) {
             const [, field, operator, value] = match;
+            console.log(field, operator, value);
             return { field: field.trim(), operator, value: value.trim() };
         }
         throw new Error('Invalid WHERE clause format');
     });
+
 }
 
 function parseJoinClause(query) {
@@ -72,6 +78,13 @@ function parseJoinClause(query) {
         joinTable: null,
         joinCondition: null
     };
+}
+
+function parseGroupBy(query) {
+    const groupByMatch = query.match(/\sGROUP BY\s(.+)/i);
+    const hasAggregateWithoutGroupBy = !Boolean(groupByMatch) && /((SUM|COUNT|AVG|MIN|MAX)\(.+)\)/.test(query);
+    const groupByFields = groupByMatch ? groupByMatch[1].split(',').map(f=>f.trim()) : null;
+    return {groupByFields, hasAggregateWithoutGroupBy};
 }
 
 
