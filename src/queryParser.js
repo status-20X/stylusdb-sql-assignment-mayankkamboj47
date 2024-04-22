@@ -5,15 +5,7 @@ function parseQuery(query) {
     let {joinTable, joinCondition, joinType} = parseJoinClause(query);
     let {hasAggregateWithoutGroupBy, groupByFields} = parseGroupBy(query);
     // Initialize variables for different parts of the query
-
-    // Split the query at the WHERE clause if it exists
-    const whereSplit = query.split(/\sWHERE\s/i);
-    query = whereSplit[0]; // Everything before WHERE clause
-
-    // Todo : Move this entirely to the new module system, where all kinds of patterns are matched
-    const whereClause = whereSplit.length > 1 ? whereSplit[1].trim().split(/GROUP BY/)[0] : null;
-
-
+    const whereClause = parseWhereString(query);
     // Todo : Move this to a function too, and extract from the returned values
     const selectRegex = /^SELECT\s(.+?)\sFROM\s+(\S+)/i;
     const selectMatch = query.match(selectRegex);
@@ -41,6 +33,15 @@ function parseQuery(query) {
         groupByFields,
         hasAggregateWithoutGroupBy
     };
+}
+
+function parseWhereString(query) {
+    const whereSplit = query.split(/\sWHERE\s/i);
+    query = whereSplit[0]; // Everything before WHERE clause
+
+    // Todo : Move this entirely to the new module system, where all kinds of patterns are matched
+    const whereClause = whereSplit.length > 1 ? whereSplit[1].trim().split(/(GROUP BY|ORDER BY|LIMIT)/)[0] : null;
+    return whereClause;
 }
 
 function parseWhereClause(whereString) {

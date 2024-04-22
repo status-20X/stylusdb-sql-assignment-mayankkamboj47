@@ -17,6 +17,8 @@ test('Parse SQL Query', () => {
         fields: ['id', 'name'],
         table: 'student',
         whereClauses: [],
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false,
         joinCondition: null,
         joinTable: null,
         joinType: null
@@ -39,6 +41,8 @@ test('Parse SQL Query with WHERE Clause', () => {
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false,
         whereClauses: [{
             "field": "age",
             "operator": "=",
@@ -65,6 +69,8 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false,
         whereClauses: [{
             "field": "age",
             "operator": "=",
@@ -108,6 +114,8 @@ test('Parse SQL Query with INNER JOIN', async () => {
         fields: ['student.name', 'enrollment.course'],
         table: 'student',
         whereClauses: [],
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false,
         joinTable: 'enrollment',
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER'
@@ -121,6 +129,8 @@ test('Parse SQL Query with INNER JOIN and WHERE Clause', async () => {
         fields: ['student.name', 'enrollment.course'],
         table: 'student',
         whereClauses: [{ field: 'student.age', operator: '>', value: '20' }],
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false,
         joinTable: 'enrollment',
         joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
         joinType: 'INNER'

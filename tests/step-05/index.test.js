@@ -21,7 +21,9 @@ test('Parse SQL Query', () => {
         joinTable : null,
         joinType : null,
         table : "student",
-        whereClauses : []
+        whereClauses : [],
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false
     });
 });
 
@@ -45,6 +47,8 @@ test('Parse SQL Query with WHERE Clause', () => {
         joinCondition : null,
         joinTable : null,
         joinType: null,
+        groupByFields : null,
+        hasAggregateWithoutGroupBy : false
     });
 });
 
