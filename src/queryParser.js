@@ -10,11 +10,11 @@ function parseQuery(query) {
     const whereSplit = query.split(/\sWHERE\s/i);
     query = whereSplit[0]; // Everything before WHERE clause
 
-    // WHERE clause is the second part after splitting, if it exists
+    // Todo : Move this entirely to the new module system, where all kinds of patterns are matched
     const whereClause = whereSplit.length > 1 ? whereSplit[1].trim().split(/GROUP BY/)[0] : null;
 
 
-    // Parse the SELECT part
+    // Todo : Move this to a function too, and extract from the returned values
     const selectRegex = /^SELECT\s(.+?)\sFROM\s+(\S+)/i;
     const selectMatch = query.match(selectRegex);
     if (!selectMatch) {
@@ -44,13 +44,13 @@ function parseQuery(query) {
 }
 
 function parseWhereClause(whereString) {
-    console.log("WHERE STRING", whereString)
     const conditionRegex = /(.*?)(=|!=|>|<|>=|<=)(.*)/;
     return whereString.split(/ AND | OR /i).map(conditionString => {
         const match = conditionString.match(conditionRegex);
         if (match) {
-            const [, field, operator, value] = match;
-            console.log(field, operator, value);
+            let [, field, operator, value] = match;
+            value = value.trim();
+            if (value[0] === "'" || value[0]=== '"') value = value.slice(1, value.length-1);
             return { field: field.trim(), operator, value: value.trim() };
         }
         throw new Error('Invalid WHERE clause format');

@@ -439,7 +439,7 @@ test('Parse SQL Query with LEFT JOIN with a WHERE clause filtering the join tabl
         "joinTable": "enrollment",
         "joinType": "LEFT",
         "table": "student",
-        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "'Physics'" }],
+        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "Physics" }],
         groupByFields: null,
         hasAggregateWithoutGroupBy: false,
     });
@@ -469,7 +469,7 @@ test('Parse SQL Query with RIGHT JOIN with a WHERE clause filtering the join tab
         "joinTable": "enrollment",
         "joinType": "RIGHT",
         "table": "student",
-        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "'Chemistry'" }],
+        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "Chemistry" }],
         groupByFields: null,
         hasAggregateWithoutGroupBy: false,
     });
@@ -603,7 +603,7 @@ test('Parse GROUP BY query with JOIN and WHERE clauses', () => {
     expect(parsed).toEqual({
         fields: ['student.name', 'COUNT(*)'],
         table: 'student',
-        whereClauses: [{ field: 'enrollment.course', operator: '=', value: '"Mathematics"' }],
+        whereClauses: [{ field: 'enrollment.course', operator: '=', value: 'Mathematics' }],
         groupByFields: ['student.name'],
         joinType: 'INNER',
         joinTable: 'enrollment',
