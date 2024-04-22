@@ -2,20 +2,35 @@ const {parseQuery} = require('./queryParser');
 const readCSV = require('./csvReader');
 
 async function executeSELECTQuery(query) {
-    const { fields, table, whereClauses, joinTable, joinCondition, joinType, groupByFields, hasAggregateWithoutGroupBy} = parseQuery(query);
+    const { fields, table, whereClauses, joinTable, joinCondition, joinType, groupByFields, hasAggregateWithoutGroupBy, orderByFields} = parseQuery(query);
     let data = await readCSV(`${table}.csv`);
     data = await join(data, joinTable, joinCondition, fields, table, joinType);
     data = data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)));
+    order(data, orderByFields);
     data = applyGroupBy(data, groupByFields, hasAggregateWithoutGroupBy, fields);
     return select(data, fields);
 }
 
 function select(data, fields) {
-    return Object.values(data).map(({summary, rows}) =>
+    let values = Object.values(data);
+    values.sort((a,b)=>b.summary.i - a.summary.i);
+    return values.map(({summary, rows}) =>
         fields.every(f=>(f in summary)) ? 
           [Object.fromEntries(fields.map(f=>[f, summary[f]]))] :
           rows.map(r => Object.fromEntries(fields.map(f=>[f, summary[f] || r[f]])))
     ).flat();
+}
+
+function order(data, orderByFields) {
+    if(!orderByFields) return;
+    data.sort((a, b) => {
+        for (let { fieldName, order } of orderByFields) {
+            if (a[fieldName] < b[fieldName]) return order === 'ASC' ? -1 : 1;
+            if (a[fieldName] > b[fieldName]) return order === 'ASC' ? 1 : -1;
+        }
+        return 0;
+    });
+    console.log(data, 'after sort');
 }
 
 function evaluateCondition(row, clause) {
@@ -70,6 +85,8 @@ function buildRow(mainRow, joinRow, table, fields) {
 }
 
 function applyGroupBy(data, groupByFields, hasAggregateWithoutGroupBy, fields) {
+    // edge case, this will cause things to break if i is also a column name, as it is overshadowed by an index
+    let i = 0;
     let fns = {
         MIN : colname => rows => Math.min(...rows.map(r=>Number(r[colname]))),
         MAX : colname => rows => Math.max(...rows.map(r=>Number(r[colname]))),
@@ -78,11 +95,12 @@ function applyGroupBy(data, groupByFields, hasAggregateWithoutGroupBy, fields) {
         COUNT : ____  => rows => rows.length
     }
     let groups = {};
-    if(groupByFields === null || groupByFields.length === 0) groups = {0 : {summary : {}, rows : data}}
+    if(groupByFields === null || groupByFields.length === 0) groups = {0 : {summary : {i}, rows : data}}
     else for(let row of data) {
         let groupName = groupByFields.map(f=>row[f]).join('\n');
         if(!(groupName in groups)) {
             let summary = Object.fromEntries(groupByFields.map(f=>[f, row[f]]));
+            summary[i] = i++;
             groups[groupName] = {summary, rows : []};
         }
         groups[groupName].rows.push(row);

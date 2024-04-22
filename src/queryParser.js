@@ -6,6 +6,7 @@ function parseQuery(query) {
     let {hasAggregateWithoutGroupBy, groupByFields} = parseGroupBy(query);
     // Initialize variables for different parts of the query
     const whereClause = parseWhereString(query);
+    const orderByFields = parseOrderBy(query);
     // Todo : Move this to a function too, and extract from the returned values
     const selectRegex = /^SELECT\s(.+?)\sFROM\s+(\S+)/i;
     const selectMatch = query.match(selectRegex);
@@ -31,7 +32,8 @@ function parseQuery(query) {
         joinCondition,
         joinType,
         groupByFields,
-        hasAggregateWithoutGroupBy
+        hasAggregateWithoutGroupBy,
+        orderByFields
     };
 }
 
@@ -59,6 +61,19 @@ function parseWhereClause(whereString) {
 
 }
 
+function parseOrderBy(query) {
+    const orderByRegex = /\sORDER BY\s(.+)/i;
+    const orderByMatch = query.match(orderByRegex);
+
+    let orderByFields = null;
+    if (orderByMatch) {
+        orderByFields = orderByMatch[1].split(',').map(field => {
+            const [fieldName, order] = field.trim().split(/\s+/);
+            return { fieldName, order: order ? order.toUpperCase() : 'ASC' };
+        });
+    }
+    return orderByFields;
+}
 function parseJoinClause(query) {
     const joinRegex = /\s(INNER|LEFT|RIGHT) JOIN\s(.+?)\sON\s([\w.]+)\s*=\s*([\w.]+)/i;
     const joinMatch = query.match(joinRegex);
@@ -82,6 +97,7 @@ function parseJoinClause(query) {
 }
 
 function parseGroupBy(query) {
+    query = query.split(/ORDER/)[0];
     const groupByMatch = query.match(/\sGROUP BY\s(.+)/i);
     const hasAggregateWithoutGroupBy = !Boolean(groupByMatch) && /((SUM|COUNT|AVG|MIN|MAX)\(.+)\)/.test(query);
     const groupByFields = groupByMatch ? groupByMatch[1].split(',').map(f=>f.trim()) : null;
