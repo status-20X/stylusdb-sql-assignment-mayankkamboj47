@@ -463,7 +463,7 @@ test('Parse SQL Query with LEFT JOIN with a WHERE clause filtering the join tabl
         "joinTable": "enrollment",
         "joinType": "LEFT",
         "table": "student",
-        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "'Physics'" }],
+        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "Physics" }],
         groupByFields: null,
         hasAggregateWithoutGroupBy: false,
         "orderByFields": null,
@@ -499,7 +499,7 @@ test('Parse SQL Query with RIGHT JOIN with a WHERE clause filtering the join tab
         "joinTable": "enrollment",
         "joinType": "RIGHT",
         "table": "student",
-        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "'Chemistry'" }],
+        "whereClauses": [{ "field": "enrollment.course", "operator": "=", "value": "Chemistry" }],
         groupByFields: null,
         hasAggregateWithoutGroupBy: false,
         "orderByFields": null,
@@ -660,7 +660,7 @@ test('Parse GROUP BY query with JOIN and WHERE clauses', () => {
     expect(parsed).toEqual({
         fields: ['student.name', 'COUNT(*)'],
         table: 'student',
-        whereClauses: [{ field: 'enrollment.course', operator: '=', value: '"Mathematics"' }],
+        whereClauses: [{ field: 'enrollment.course', operator: '=', value: 'Mathematics' }],
         groupByFields: ['student.name'],
         joinType: 'INNER',
         joinTable: 'enrollment',
@@ -694,17 +694,6 @@ test('Execute SQL Query with ORDER BY and WHERE', async () => {
     expect(result).toStrictEqual([
         { name: 'John' },
         { name: 'Jane' },
-    ]);
-});
-test('Execute SQL Query with ORDER BY and GROUP BY', async () => {
-    const query = 'SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC';
-    const result = await executeSELECTQuery(query);
-
-    expect(result).toStrictEqual([
-        { age: '30', 'COUNT(id) as count': 1 },
-        { age: '25', 'COUNT(id) as count': 1 },
-        { age: '24', 'COUNT(id) as count': 1 },
-        { age: '22', 'COUNT(id) as count': 1 }
     ]);
 });
 

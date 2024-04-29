@@ -1,6 +1,6 @@
-const readCSV = require('../../src/csvReader');
-const {parseQuery} = require('../../src/queryParser');
-const executeSELECTQuery = require('../../src/index');
+const {readCSV} = require('../../src/csvReader');
+const {parseSelectQuery} = require('../../src/queryParser');
+const {executeSELECTQuery} = require('../../src/queryExecutor');
 
 test('Read CSV File', async () => {
     const data = await readCSV('./student.csv');
@@ -12,11 +12,11 @@ test('Read CSV File', async () => {
 
 test('Parse SQL Query', () => {
     const query = 'SELECT id, name FROM student';
-    const parsed = parseQuery(query);
+    const parsed = parseSelectQuery(query);
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
-        whereClauses: [],
+        isDistinct: false, limit: null, orderByFields: null, whereClauses: [],
         joinTable : null,
         joinCondition : null,
         joinType : null,
@@ -37,14 +37,14 @@ test('Execute SQL Query', async () => {
 
 test('Parse SQL Query with WHERE Clause', () => {
     const query = 'SELECT id, name FROM student WHERE age = 25';
-    const parsed = parseQuery(query);
+    const parsed = parseSelectQuery(query);
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
         joinTable: null,
         joinCondition: null,
         joinType:null,
-        whereClauses: [{
+        isDistinct: false, limit: null, orderByFields: null, whereClauses: [{
           field: "age",
           operator: "=",
           value: "25",
@@ -65,14 +65,14 @@ test('Execute SQL Query with WHERE Clause', async () => {
 
 test('Parse SQL Query with Multiple WHERE Clauses', () => {
     const query = 'SELECT id, name FROM student WHERE age = 30 AND name = John';
-    const parsed = parseQuery(query);
+    const parsed = parseSelectQuery(query);
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
         joinTable : null,
         joinCondition: null,
         joinType : null,
-        whereClauses: [{
+        isDistinct: false, limit: null, orderByFields: null, whereClauses: [{
             "field": "age",
             "operator": "=",
             "value": "30",
